@@ -12,6 +12,7 @@ struct Application: App {
     var body: some Scene {
         WindowGroup {
             Main()
+                .environmentObject(ViewModel())
         }
     }
 }

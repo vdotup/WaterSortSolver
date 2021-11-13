@@ -1,44 +1,21 @@
 //
-//  Cup.swift
+//  CupColor.swift
 //  WaterSortSolver
 //
-//  Created by Abdurrahman Alfudeghi on 03/11/2021.
+//  Created by Abdurrahman Alfudeghi on 13/11/2021.
 //
 
 import SwiftUI
 
-class Cup: ObservableObject {
-    
-    static func == (lhs: Cup, rhs: Cup) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    let MAX_COLORS: Int = 4
-    
-    @Published var id: UUID = UUID()
-    @Published var pos: Int
-    @Published var colors: [CupColor]
-    
-    init(_ pos: Int, _ colors: [CupColor]) {
-        self.pos = pos
-        self.colors = colors
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-    
-}
-
-class CupColor: ObservableObject, Equatable {
+struct CupColor: Equatable {
     
     static func == (lhs: CupColor, rhs: CupColor) -> Bool {
         lhs.color == rhs.color
     }
     
-    @Published var id: UUID = UUID()
-    @Published var color: Color
-    @Published var name: String
+    var id: UUID = UUID()
+    var color: Color
+    var name: String
     
     init(id: UUID = UUID(), _ color: Color, _ name: String = "") {
         self.id = id
@@ -61,20 +38,4 @@ class CupColor: ObservableObject, Equatable {
     public static var clC: CupColor { return CupColor(Color.clear, "clear") }
     public static var unC: CupColor { return CupColor(Color.teal, "unknown") }
     
-}
-
-class CupMove: ObservableObject, Equatable {
-    @Published var id: UUID = UUID()
-    @Published var from: Int
-    @Published var into: Int
-    
-    static func == (lhs: CupMove, rhs: CupMove) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    init(id: UUID = UUID(), from: Int, into: Int) {
-        self.id = id
-        self.from = from
-        self.into = into
-    }
 }

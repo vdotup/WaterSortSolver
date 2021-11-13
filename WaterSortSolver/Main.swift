@@ -9,130 +9,118 @@ import SwiftUI
 
 struct Main: View {
     
-    let MAX_HEIGHT: CGFloat = 200
-    @ObservedObject var vm = ViewModel()
+    let MAX_HEIGHT: CGFloat = 100
+    @EnvironmentObject var vm: ViewModel
+    @State var showingCupsEdit: Bool = false
     
     var body: some View {
-        VStack {
-            HStack(spacing: 1) {
-                ForEach(vm.cups, id: \.id) { cup in
-                    VStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            ForEach(cup.colors, id: \.id) { color in
-                                if color == .unC {
-                                    ZStack {
-                                        Rectangle()
-                                            .foregroundColor(color.color)
-                                            .border(.black, width: 1)
-                                        Text("?")
-                                            .font(.system(size: 25, weight: .black, design: .rounded))
-                                            .foregroundColor(.white)
-                                    }
-                                    .onTapGesture {
-                                        vm.removeColor(color, cup)
-                                    }
-                                } else {
-                                    Rectangle()
-                                        .foregroundColor(color.color)
-                                        .border(.black, width: 1)
-                                        .onTapGesture {
-                                            vm.removeColor(color, cup)
+        ZStack {
+            if vm.solving {
+                VStack(spacing: 10) {
+                    ProgressView()
+                        .tint(.red)
+                    VStack(spacing: 5) {
+                        Text("Tries: \(vm.tries)")
+                            .frame(width: 100)
+                        Text("Solves: \(vm.solves)")
+                            .frame(width: 100)
+                        Text("Best: \(vm.bestSolve)")
+                            .frame(width: 100)
+                        Text("Best Moves: \(vm.bestMoves)")
+                            .frame(width: 100)
+                        Text("Rejected: \(vm.rejectedMoves.count)")
+                            .frame(width: 100)
+                    }
+                    .font(.caption)
+                    
+                    Button("Stop", action: vm.reset)
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                        .font(.caption)
+                }
+            } else {
+                VStack {
+                    VStack {
+                        HStack {
+                            Button("Edit Cups", action: { showingCupsEdit.toggle() })
+                                .font(.caption)
+                                .buttonStyle(.bordered)
+                                .tint(.orange)
+                            Spacer()
+                        }
+                        HStack(spacing: 1) {
+                            ForEach(vm.cups, id: \.id) { cup in
+                                VStack(spacing: 0) {
+                                    VStack(spacing: -1) {
+                                        ForEach(cup.colors, id: \.id) { color in
+                                            if color == .unC {
+                                                ZStack {
+                                                    Rectangle()
+                                                        .foregroundColor(color.color)
+                                                        .border(.black, width: 1)
+                                                    Text("?")
+                                                        .font(.system(size: 15, weight: .black, design: .rounded))
+                                                        .foregroundColor(.white)
+                                                }
+                                            } else {
+                                                Rectangle()
+                                                    .foregroundColor(color.color)
+                                                    .border(.black, width: 1)
+                                            }
                                         }
+                                    }
+                                    .frame(height: MAX_HEIGHT)
+                                    Text("\(cup.pos)")
+                                        .foregroundColor(.black)
+                                        .font(.caption)
                                 }
+                                .border(.black, width: 1)
                             }
                         }
-                        .frame(height: MAX_HEIGHT)
-                        
-                        Text("\(cup.pos)")
-                            .foregroundColor(.black)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.25))
+                    .cornerRadius(10)
+                    
+                    HStack {
+                        MovesView()
+                        RejectedMovesView()
+                    }
+                    
+                    
+                    Spacer()
+                    HStack {
+                        Button("Start", action: {})
+                            .buttonStyle(.bordered)
                             .font(.caption)
-                        
-                        if vm.editing && !vm.started {
-                            VStack {
-                                Button(action: { vm.addCup(cup) }) {
-                                    ZStack {
-                                        Circle()
-                                            .foregroundColor(.green)
-                                        Text("+")
-                                            .font(.caption)
-                                    }
-                                }
-                                Button(action: { vm.removeCup(cup) }) {
-                                    ZStack {
-                                        Circle()
-                                            .foregroundColor(.red)
-                                        Text("-")
-                                            .font(.caption)
-                                    }
-                                }
-                            }
-                            .padding(2)
-                            .frame(height: 50)
-                        }
-                        
-                            if !vm.editing && !vm.started {
-                                Button(action: { vm.selectMove(cup) }) {
-                                    ZStack {
-                                        Circle()
-                                            .foregroundColor(.green)
-                                        Text("!")
-                                            .font(.caption)
-                                    }
-                                }
-                                .padding(2)
-                                .frame(height: 50)
-                            }
-                        
-                        if vm.editing && !vm.started {
-                            VStack(spacing: 2) {
-                                ForEach (vm.colors, id: \.id) { color in
-                                    Button(action: { vm.addColor(color, cup) }) {
-                                        Circle()
-                                            .foregroundColor(color.color)
-                                    }
-                                }
-                            }
-                            .padding(2)
-                            .frame(height: 300)
-                        }
+                            .tint(.green)
+                            .disabled(true)
+                        Spacer()
+                        Button("Undo", action: vm.undo)
+                            .buttonStyle(.bordered)
+                            .font(.caption)
+                            .tint(.green)
+                        Spacer()
+                        Button("Next", action: vm.next)
+                            .buttonStyle(.bordered)
+                            .font(.caption)
+                            .tint(.green)
+                        Spacer()
+                        Button("Reset", action: vm.reset)
+                            .buttonStyle(.bordered)
+                            .font(.caption)
+                            .tint(.red)
                     }
-                    .border(.black, width: 1)
+                    .padding()
+                    .background(Color.gray.opacity(0.25))
+                    .cornerRadius(10)
                 }
-            }
-            if !vm.editing {
-                ScrollView(.vertical) {
-                    VStack(spacing: 2) {
-                        ForEach (vm.moves, id: \.id) { move in
-                            HStack {
-                                Button(action: { vm.removeMove(move) }) {
-                                    Image(systemName: "minus.circle.fill")
-                                        .foregroundColor(.red)
-                                }
-                                Text("\(move.from)")
-                                    .font(.caption)
-                                Image(systemName: "arrow.right")
-                                Text("\(move.into)")
-                                    .font(.caption)
-                                Spacer()
-                            }
-                        }
-                    }
-                }
-            }
-            Spacer()
-            HStack {
-                if vm.editing && !vm.started {
-                    Button("Moves", action: { vm.editing = false })
-                } else if !vm.editing && !vm.started {
-                    Button("Start", action: vm.start)
-                        .disabled(vm.moves.count == 0)
-                } else if vm.started {
-                    Button("Totals", action: vm.getTotals)
-                }
-                Spacer()
+                .padding()
             }
         }
-        .padding()
+        .sheet(isPresented: $showingCupsEdit) {
+            CupsEditView()
+        }
     }
 }
 
