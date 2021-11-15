@@ -88,7 +88,11 @@ struct CupsEditView: View {
                     .font(.caption)
                     .tint(.brown)
                 Spacer()
-                Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                Button("Done", action: {
+                    vm.initCups = Array(vm.cups)
+                    vm.reset()
+                    presentationMode.wrappedValue.dismiss()
+                })
                     .buttonStyle(.bordered)
                     .font(.caption)
                     .tint(.blue)

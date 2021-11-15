@@ -11,7 +11,8 @@ struct Main: View {
     
     let MAX_HEIGHT: CGFloat = 100
     @EnvironmentObject var vm: ViewModel
-    @State var showingCupsEdit: Bool = false
+    @State private var showingCupsEdit: Bool = false
+    @State private var showingSteps: Bool = false
     
     var body: some View {
         VStack {
@@ -95,6 +96,10 @@ struct Main: View {
                         .buttonStyle(.bordered)
                         .font(.caption)
                         .tint(.blue)
+                    Button("Steps", action: { showingSteps.toggle() })
+                        .buttonStyle(.bordered)
+                        .font(.caption)
+                        .tint(.pink)
                     Spacer()
                 }
                 .padding()
@@ -105,6 +110,9 @@ struct Main: View {
         .padding()
         .sheet(isPresented: $showingCupsEdit) {
             CupsEditView()
+        }
+        .sheet(isPresented: $showingSteps) {
+            StepsView()
         }
     }
 }

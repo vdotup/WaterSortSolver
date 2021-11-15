@@ -250,15 +250,20 @@ final class ViewModel: ObservableObject {
         for _ in 0..<move.cells {
             movedColors.append(cups[move.from].colors.removeFirst())
         }
-        cups[move.into].colors.insert(contentsOf: movedColors, at: 0)
+        withAnimation(.easeInOut(duration: 0.25)) {
+            cups[move.into].colors.insert(contentsOf: movedColors, at: 0)
+            
+            // add clear color until max is reached
+            while cups[move.into].colors.count < 4 {
+                cups[move.into].colors.insert(.clC, at: 0)
+            }
+            while (cups[move.from].colors.count < 4) {
+                cups[move.from].colors.insert(.clC, at: 0)
+            }
+        }
         
-        // add clear color until max is reached
-        while cups[move.into].colors.count < 4 {
-            cups[move.into].colors.insert(.clC, at: 0)
-        }
-        while (cups[move.from].colors.count < 4) {
-            cups[move.from].colors.insert(.clC, at: 0)
-        }
+        
+        
     }
     
 }
