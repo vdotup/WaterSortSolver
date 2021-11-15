@@ -14,6 +14,7 @@ struct CupMove: Equatable {
     var fromColor: CupColor
     var intoColor: CupColor
     var cells: Int
+    var possibleMoves: Int = 0
     
     static func == (lhs: CupMove, rhs: CupMove) -> Bool {
         return lhs.from == rhs.from && lhs.into == rhs.into && lhs.fromColor == rhs.fromColor && lhs.intoColor == rhs.intoColor

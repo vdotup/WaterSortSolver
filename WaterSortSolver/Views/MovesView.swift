@@ -14,7 +14,7 @@ struct MovesView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Moves")
+                Text("Moves [\(vm.moves.count)]")
                     .font(.headline)
                 Spacer()
             }
@@ -43,6 +43,15 @@ struct MovesView: View {
                             Rectangle()
                                 .foregroundColor(move.intoColor.color)
                                 .frame(width: 20)
+                            ZStack {
+                                Circle()
+                                    .foregroundColor(.black)
+                                    .frame(width: 20)
+                                Text("\(move.possibleMoves)")
+                                    .foregroundColor(.white)
+                                    .font(.caption)
+                                    .frame(width: 15)
+                            }
                             Spacer()
                         }
                         .frame(height: 20)

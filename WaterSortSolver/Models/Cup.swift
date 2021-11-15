@@ -68,6 +68,22 @@ struct Cup {
         return match.count
     }
     
+    mutating func removeAllColors() {
+        colors.removeAll()
+        while (colors.count < 4) {
+            colors.insert(.clC, at: 0)
+        }
+    }
+    
+    func isSingleColor() -> Bool {
+        let color = topColor()
+        for c in colors {
+            if c == .clC { continue }
+            if c != color { return false }
+        }
+        return true
+    }
+    
 }
 
 

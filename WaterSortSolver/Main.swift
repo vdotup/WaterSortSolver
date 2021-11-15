@@ -14,110 +14,95 @@ struct Main: View {
     @State var showingCupsEdit: Bool = false
     
     var body: some View {
-        ZStack {
-            if vm.solving {
-                VStack(spacing: 10) {
-                    ProgressView()
-                        .tint(.red)
-                    VStack(spacing: 5) {
-                        Text("Tries: \(vm.tries)")
-                            .frame(width: 100)
-                        Text("Solves: \(vm.solves)")
-                            .frame(width: 100)
-                        Text("Best: \(vm.bestSolve)")
-                            .frame(width: 100)
-                        Text("Best Moves: \(vm.bestMoves)")
-                            .frame(width: 100)
-                        Text("Rejected: \(vm.rejectedMoves.count)")
-                            .frame(width: 100)
-                    }
-                    .font(.caption)
-                    
-                    Button("Stop", action: vm.reset)
-                        .buttonStyle(.bordered)
-                        .tint(.red)
+        VStack {
+            VStack {
+                HStack {
+                    Button("Edit Cups", action: { showingCupsEdit.toggle() })
                         .font(.caption)
-                }
-            } else {
-                VStack {
-                    VStack {
-                        HStack {
-                            Button("Edit Cups", action: { showingCupsEdit.toggle() })
-                                .font(.caption)
-                                .buttonStyle(.bordered)
-                                .tint(.orange)
-                            Spacer()
-                        }
-                        HStack(spacing: 1) {
-                            ForEach(vm.cups, id: \.id) { cup in
-                                VStack(spacing: 0) {
-                                    VStack(spacing: -1) {
-                                        ForEach(cup.colors, id: \.id) { color in
-                                            if color == .unC {
-                                                ZStack {
-                                                    Rectangle()
-                                                        .foregroundColor(color.color)
-                                                        .border(.black, width: 1)
-                                                    Text("?")
-                                                        .font(.system(size: 15, weight: .black, design: .rounded))
-                                                        .foregroundColor(.white)
-                                                }
-                                            } else {
-                                                Rectangle()
-                                                    .foregroundColor(color.color)
-                                                    .border(.black, width: 1)
-                                            }
-                                        }
-                                    }
-                                    .frame(height: MAX_HEIGHT)
-                                    Text("\(cup.pos)")
-                                        .foregroundColor(.black)
-                                        .font(.caption)
-                                }
-                                .border(.black, width: 1)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.25))
-                    .cornerRadius(10)
-                    
-                    HStack {
-                        MovesView()
-                        RejectedMovesView()
-                    }
-                    
-                    
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
                     Spacer()
-                    HStack {
-                        Button("Start", action: {})
-                            .buttonStyle(.bordered)
-                            .font(.caption)
-                            .tint(.green)
-                            .disabled(true)
-                        Spacer()
-                        Button("Undo", action: vm.undo)
-                            .buttonStyle(.bordered)
-                            .font(.caption)
-                            .tint(.green)
-                        Spacer()
-                        Button("Next", action: vm.next)
-                            .buttonStyle(.bordered)
-                            .font(.caption)
-                            .tint(.green)
-                        Spacer()
-                        Button("Reset", action: vm.reset)
-                            .buttonStyle(.bordered)
-                            .font(.caption)
-                            .tint(.red)
+                }
+                HStack(spacing: 1) {
+                    ForEach(vm.cups, id: \.id) { cup in
+                        VStack(spacing: 0) {
+                            VStack(spacing: -1) {
+                                ForEach(cup.colors, id: \.id) { color in
+                                    if color == .unC {
+                                        ZStack {
+                                            Rectangle()
+                                                .foregroundColor(color.color)
+                                                .border(.black, width: 1)
+                                            Text("?")
+                                                .font(.system(size: 15, weight: .black, design: .rounded))
+                                                .foregroundColor(.white)
+                                        }
+                                    } else {
+                                        Rectangle()
+                                            .foregroundColor(color.color)
+                                            .border(.black, width: 1)
+                                    }
+                                }
+                            }
+                            .frame(height: MAX_HEIGHT)
+                            Text("\(cup.pos)")
+                                .foregroundColor(.black)
+                                .font(.caption)
+                        }
+                        .border(.black, width: 1)
                     }
-                    .padding()
-                    .background(Color.gray.opacity(0.25))
-                    .cornerRadius(10)
+                }
+            }
+            .padding()
+            .background(Color.gray.opacity(0.25))
+            .cornerRadius(10)
+            
+            HStack {
+                MovesView()
+                GarbageMovesView()
+            }
+            
+            
+            Spacer()
+            VStack {
+                HStack {
+                    Button("Next", action: vm.next)
+                        .buttonStyle(.bordered)
+                        .font(.caption)
+                        .tint(.green)
+                    Button("Undo", action: vm.undo)
+                        .buttonStyle(.bordered)
+                        .font(.caption)
+                        .tint(.green)
+                        .disabled(vm.moves.count == 0)
+                    Button("UndoS", action: vm.undoS)
+                        .buttonStyle(.bordered)
+                        .font(.caption)
+                        .tint(.green)
+                        .disabled(vm.moves.filter { $0.possibleMoves > 1 }.count == 0)
+                    Spacer()
+                    Button("Reset", action: vm.reset)
+                        .buttonStyle(.bordered)
+                        .font(.caption)
+                        .tint(.red)
                 }
                 .padding()
+                .background(Color.gray.opacity(0.25))
+                .cornerRadius(10)
+                
+                HStack {
+                    Button("Solve", action: vm.solve)
+                        .buttonStyle(.bordered)
+                        .font(.caption)
+                        .tint(.blue)
+                    Spacer()
+                }
+                .padding()
+                .background(Color.gray.opacity(0.25))
+                .cornerRadius(10)
             }
         }
+        .padding()
         .sheet(isPresented: $showingCupsEdit) {
             CupsEditView()
         }

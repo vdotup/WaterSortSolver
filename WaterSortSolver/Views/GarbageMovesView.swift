@@ -7,20 +7,20 @@
 
 import SwiftUI
 
-struct RejectedMovesView: View {
+struct GarbageMovesView: View {
     
     @EnvironmentObject var vm: ViewModel
     
     var body: some View {
         VStack {
             HStack {
-                Text("Rejected Moves")
+                Text("Garbage [\(vm.garbage.count)]")
                     .font(.headline)
                 Spacer()
             }
             ScrollView(.vertical) {
                 VStack(spacing: 2) {
-                    ForEach (vm.rejectedMoves, id: \.id) { move in
+                    ForEach (vm.garbage, id: \.id) { move in
                         HStack {
                             Text("\(move.from)")
                                 .font(.caption)
@@ -53,8 +53,8 @@ struct RejectedMovesView: View {
     }
 }
 
-struct RejectedMovesView_Previews: PreviewProvider {
+struct GarbageMovesView_Previews: PreviewProvider {
     static var previews: some View {
-        RejectedMovesView()
+        GarbageMovesView()
     }
 }

@@ -17,16 +17,10 @@ final class ViewModel: ObservableObject {
     
     @Published var selectedFrom: Int = -1
     @Published var selectedInto: Int = -1
-    @Published var editing: Bool = true
-    @Published var started: Bool = false
-    @Published var reject: Bool = true
     @Published var solving: Bool = false
-    @Published var tries: Int = 0
-    @Published var solves: Int = 0
-    @Published var bestSolve: Int = 0
-    @Published var bestMoves: Int = 0
+    @Published var editing: Bool = false
     
-    @Published var rejectedMoves: [CupMove] = []
+    @Published var garbage: [CupMove] = []
     @Published var moves: [CupMove] = []
     
     @Published var initCups: [Cup] = []
@@ -34,21 +28,34 @@ final class ViewModel: ObservableObject {
     var cancellables = [AnyCancellable]()
     
     init() {
-        cups.append(Cup(0, [.blC, .g1C, .cyC, .cyC])) //
-        cups.append(Cup(1, [.puC, .piC, .g2C, .grC])) //
-        cups.append(Cup(2, [.orC, .puC, .reC, .brC])) //
-        cups.append(Cup(3, [.orC, .piC, .reC, .orC])) //
-        cups.append(Cup(4, [.g1C, .reC, .yeC, .blC])) //
-        cups.append(Cup(5, [.yeC, .g1C, .brC, .g1C])) //
-        cups.append(Cup(6, [.brC, .puC, .reC, .g3C])) //
+//        cups.append(Cup(0, [.blC, .g1C, .cyC, .cyC]))
+//        cups.append(Cup(1, [.puC, .piC, .g2C, .grC]))
+//        cups.append(Cup(2, [.orC, .puC, .reC, .brC]))
+//        cups.append(Cup(3, [.orC, .piC, .reC, .orC]))
+//        cups.append(Cup(4, [.g1C, .reC, .yeC, .blC]))
+//        cups.append(Cup(5, [.yeC, .g1C, .brC, .g1C]))
+//        cups.append(Cup(6, [.brC, .puC, .reC, .g3C]))
+//
+//        cups.append(Cup(7, [.g3C, .puC, .piC, .g3C]))
+//        cups.append(Cup(8, [.g2C, .grC, .cyC, .blC]))
+//        cups.append(Cup(9, [.brC, .yeC, .grC, .g2C]))
+//        cups.append(Cup(10, [.grC, .yeC, .g3C, .blC]))
+//        cups.append(Cup(11, [.g2C, .cyC, .piC, .orC]))
+//        cups.append(Cup(12, [.clC, .clC, .clC, .clC]))
+//        cups.append(Cup(13, [.clC, .clC, .clC, .clC]))
         
-        cups.append(Cup(7, [.g3C, .puC, .piC, .g3C])) //
-        cups.append(Cup(8, [.g2C, .grC, .cyC, .blC])) //
-        cups.append(Cup(9, [.brC, .yeC, .grC, .g2C]))
-        cups.append(Cup(10, [.grC, .yeC, .g3C, .blC]))
-        cups.append(Cup(11, [.g2C, .cyC, .piC, .orC]))
-        cups.append(Cup(12, [.clC, .clC, .clC, .clC]))
-        cups.append(Cup(13, [.clC, .clC, .clC, .clC]))
+        cups.append(Cup(0, [.cyC, .g2C, .reC, .g3C]))
+        cups.append(Cup(1, [.cyC, .cyC, .g2C, .piC]))
+        cups.append(Cup(2, [.reC, .reC, .g2C, .puC]))
+        cups.append(Cup(3, [.blC, .piC, .orC, .grC]))
+        cups.append(Cup(4, [.piC, .reC, .grC, .puC]))
+        cups.append(Cup(5, [.g3C, .grC, .puC, .blC]))
+        
+        cups.append(Cup(6, [.orC, .puC, .g2C, .blC]))
+        cups.append(Cup(7, [.orC, .grC, .orC, .g3C]))
+        cups.append(Cup(8, [.piC, .g3C, .blC, .cyC]))
+        cups.append(Cup(9, [.clC, .clC, .clC, .clC]))
+        cups.append(Cup(10, [.clC, .clC, .clC, .clC]))
         
         initCups = Array(cups)
     }
@@ -57,12 +64,14 @@ final class ViewModel: ObservableObject {
         if cups.count >= MAX_CUPS { return }
         guard let index = cups.firstIndex(where: { $0 == cup }) else { return }
         cups.insert(Cup(cups.count, [.clC, .clC, .clC, .clC]), at: index)
+        for i in 0..<cups.count { cups[i].pos = i }
     }
     
     func removeCup(_ cup: Cup) {
         if cups.count <= MIN_CUPS { return }
         guard let index = cups.firstIndex(where: { $0 == cup }) else { return }
         cups.remove(at: index)
+        for i in 0..<cups.count { cups[i].pos = i }
     }
     
     func addColor(_ color: CupColor, _ cup: Cup) {
@@ -76,9 +85,6 @@ final class ViewModel: ObservableObject {
     }
     
     func removeColor(_ color: CupColor, _ cup: Cup) {
-        if started {
-            return
-        }
         guard let cupIndex = cups.firstIndex(where: { $0 == cup }) else {
             print("index not found")
             return
@@ -102,50 +108,109 @@ final class ViewModel: ObservableObject {
         moves.remove(at: index)
     }
     
+    func validate() -> Bool {
+        return true
+    }
+    
     func findNearestMove() -> CupMove? {
+        
+        // need to know how many possible moves and store it in returned move object.
+        
         //print("----------FIND NEAREST MOVE----------")
-        for fromCup in cups.shuffled() {
+        
+        var possibleMoves: [CupMove?] = []
+        
+        for fromCup in cups {
             
             // if empty cup skip
             if fromCup.topColor() == .clC {
                 continue
             }
+            if fromCup.cells(for: fromCup.topColor()) == 4 {
+                print("SOLVED CUP")
+                continue
+            }
             
             // store top color, and cells
             let fromCupColor = fromCup.topColor()
-            let fromCupCells = fromCup.cells(for: fromCupColor)
+            let fromCupCells = fromCup.cells(for:  fromCupColor)
             //print("OCUP:", oCup.pos, "COLOR:", oCupColor.name, "CELLS:", oCupCells)
-            for intoCup in cups.shuffled() {
+            for intoCup in cups {
                 if fromCup == intoCup {
                     continue
                 }
                 if fromCup.cells(for: .clC) == 4 {
-                    print(" ALL CLC")
                     continue
                 }
                 
                 let intoCupColor = intoCup.topColor()
-                //let iCupCells = iCup.cells(for: iCupColor)
+                
                 if (intoCupColor != fromCupColor && !intoCup.isEmpty()) {
                     continue
                 }
                 if !intoCup.hasSpace(for: fromCupCells) {
                     continue
                 }
+                if fromCup.isSingleColor() && intoCup.topColor() == .clC {
+                    print("unnececary move")
+                    continue
+                }
+                // if from cup has one color, and intoColor is empty skip [unnececary move]
+                
                 //print(" ICUP:",iCup.pos, "COLOR", iCupColor.name , "HAS SPACE:", iCup.hasSpace(for: oCupCells))
                 
                 guard let fromIndex = cups.firstIndex(where: { $0 == fromCup }) else { return nil }
                 guard let intoIndex = cups.firstIndex(where: { $0 == intoCup }) else { return nil }
+                
                 let move = CupMove(from: fromIndex, into: intoIndex, fromColor: fromCup.topColor(), intoColor: intoCup.topColor(), cells: fromCupCells)
-                return move
+                possibleMoves.append(move)
             }
         }
-        return nil
+        possibleMoves.removeAll { move in
+            garbage.contains(move!)
+        }
+        for i in 0..<possibleMoves.count {
+            possibleMoves[i]!.possibleMoves = possibleMoves.count
+        }
+        return possibleMoves.randomElement() ?? nil
+    }
+    
+    func check() -> Bool {
+        var solved: [Cup] = []
+        for cup in cups {
+            if cup.colors.contains(.clC) { continue }
+            if cup.cells(for: cup.topColor()) == 4 {
+                solved.append(cup)
+            }
+        }
+        if solved.count == cups.count - 2 {
+            return true
+        }
+        return false
+    }
+    
+    func solve() {
+        if check() {
+            print("TADA!!")
+            return
+        }
+        guard let move = findNearestMove() else {
+            undoS()
+            solve()
+            return
+        }
+        moves.append(move)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            self.transfer(move: move)
+            self.solve()
+        }
     }
     
     // next move
     func next() {
-        guard let move = findNearestMove() else { return }
+        guard let move = findNearestMove() else {
+            return
+        }
         moves.append(move)
         transfer(move: move)
     }
@@ -163,6 +228,16 @@ final class ViewModel: ObservableObject {
         guard let lastMove = moves.last else { return }
         moves.removeLast()
         transfer(move: CupMove(from: lastMove.into, into: lastMove.from, fromColor: lastMove.intoColor, intoColor: lastMove.fromColor, cells: lastMove.cells))
+    }
+    
+    // undo to last move with more than one possible move
+    func undoS() {
+        if moves.count == 0 { return }
+        while moves.last!.possibleMoves <= 2 {
+            undo()
+        }
+        garbage.append(moves.last!)
+        undo()
     }
     
     // apply the passed CupMove
